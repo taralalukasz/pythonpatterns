@@ -40,9 +40,3 @@ def test_when_a_file_has_been_renamed_in_the_source():
         shutil.rmtree(source)
         shutil.rmtree(dest)
 
-        
-
-    def test_when_a_file_exists_in_the_source_but_not_the_destination():
-        source_hashes = {'hash1': 'fn1'}
-        dest_hashes = {}
-        expected_actions = [('COPY', '/src/fn1', '/dst/fn1')]
