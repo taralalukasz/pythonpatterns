@@ -42,9 +42,48 @@ def sync(source, dest):
             shutil.copy(Path(source) / source_filename, Path(dest) /  source_filename)
 
 
-    # for key, value in source_hashes.items():
-    #     print(key)
-    #     print(value)
+
+def read_paths_and_hashes(dir):
+    files_and_hashes = {}
+    for folder, _, files in os.walk(dir):
+        for filename in files:
+            files_and_hashes[hash_file(Path(folder) / filename)]  = filename
+
+    return files_and_hashes
+
+def determine_actions(source_hashes: dict, dest_hashes: dict, source, dest):   
+    for hash, source_name in source_hashes.items(): #you can iterate through dictionarys like that     
+
+        if hash not in dest_hashes:
+            yield 'COPY', Path(source)/source_name, Path(dest)/source_name
+        elif hash in dest_hashes and dest_hashes[hash] != source_name:
+            yield 'MOVE',Path(dest)/dest_hashes[hash], Path(dest)/source_name
+    #nie ma w source ale jest w dest
+    
+    for dest_hash, dest_fname in dest_hashes.items():
+        if dest_hash not in source_hashes:
+            
+            yield 'DELETE', Path(dest)/dest_fname
+        
 
 
-sync("source", "destination")
+#refactored sync
+def sync2(source, dest):
+    #sync file exists , desc not
+    source_hashes = read_paths_and_hashes(source)
+    seen = read_paths_and_hashes(dest)
+
+
+    actions = determine_actions(source_hashes, seen, source, dest)
+
+    for act, src, dst in actions:
+        if act == 'COPY':
+            shutil.copy(src, dst)
+        if act == 'MOVE':
+            shutil.move(src, dst)
+        if act == 'DELETE':
+            src.unlink()
+
+
+
+# sync("source", "destination")

@@ -40,3 +40,30 @@ def test_when_a_file_has_been_renamed_in_the_source():
         shutil.rmtree(source)
         shutil.rmtree(dest)
 
+        
+
+def test_when_a_file_exists_in_the_source_but_not_the_destination():
+    source_hashes = {'hash1': 'fn1'}
+    dest_hashes = {}
+    expected_actions = [('COPY', Path('/src/fn1'), Path('/dst/fn1'))]
+
+    result = sync.determine_actions(source_hashes, dest_hashes, Path("/src"), Path("/dst"))
+
+    assert list(result) == expected_actions 
+
+def test_when_a_file_has_been_renamed_in_the_source():
+    source_hashes = {'hash1': 'fn1'}
+    dest_hashes = {'hash1': 'fn2'}
+    expected_actions = [('MOVE', Path('/dst/fn2'), Path('/dst/fn1'))]
+
+    result = sync.determine_actions(source_hashes, dest_hashes, Path("/src"), Path("/dst"))
+    assert list(result) == expected_actions 
+
+def test_when_a_file_does_not_exist_in_source_but_exists_in_destination():
+    source_hashes = {}
+    dest_hashes = {'hash1': 'fn1'}
+    expected_actions = [('DELETE', Path('/dst/fn1'))]
+
+    result = sync.determine_actions(source_hashes, dest_hashes, Path("/src"), Path("/dst"))
+
+    assert list(result) == expected_actions 
