@@ -2,6 +2,7 @@ import tempfile
 import shutil
 import sync
 from pathlib import Path
+from filesystem import  FakeFileSystem
 
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
     try:
@@ -67,3 +68,25 @@ def test_when_a_file_does_not_exist_in_source_but_exists_in_destination():
     result = sync.determine_actions(source_hashes, dest_hashes, Path("/src"), Path("/dst"))
 
     assert list(result) == expected_actions 
+
+
+def test_sync3_copy():
+    files = {"/src" : {"sha1" : "filename1"}, "/dst" : {}}
+    fs = FakeFileSystem(files)
+    sync.sync3("/src", "/dst", fs)
+
+    assert fs.actions[0] == ('COPY', Path("/src/filename1"), Path("/dst/filename1"))
+
+def test_sync3_move():
+    files = {"/src" : {"sha1" : "filename2"}, "/dst" : {"sha1" : "filename1"}}
+    fs = FakeFileSystem(files)
+    sync.sync3("/src", "/dst", fs)
+
+    assert fs.actions[0] == ('MOVE', Path("/dst/filename1"), Path("/dst/filename2"))
+
+def test_sync3_delete():
+    files = {"/src" : {}, "/dst" : {"sha1" : "filename1"}}
+    fs = FakeFileSystem(files)
+    sync.sync3("/src", "/dst", fs)
+
+    assert fs.actions[0] == ('DELETE', Path("/dst/filename1"))

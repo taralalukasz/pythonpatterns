@@ -2,6 +2,7 @@ import hashlib
 import os
 import shutil
 from pathlib import Path
+from filesystem import FileSystem
 
 
 BUF_SIZE = 65536 #size of one chunk of the file in bytes 
@@ -87,3 +88,22 @@ def sync2(source, dest):
 
 
 # sync("source", "destination")
+
+def sync3(source, dest, filesystem=FileSystem()):  #(1)
+    source_hashes = filesystem.read(source)  #(2)
+    dest_hashes = filesystem.read(dest)  #(2)
+
+    for sha, filename in source_hashes.items():
+        if sha not in dest_hashes:
+            sourcepath = Path(source) / filename
+            destpath = Path(dest) / filename
+            filesystem.copy(sourcepath, destpath)  #(3)
+
+        elif dest_hashes[sha] != filename:
+            olddestpath = Path(dest) / dest_hashes[sha]
+            newdestpath = Path(dest) / filename
+            filesystem.move(olddestpath, newdestpath)  #(3)
+
+    for sha, filename in dest_hashes.items():
+        if sha not in source_hashes:
+            filesystem.delete(Path(dest) / filename)  #(3)
