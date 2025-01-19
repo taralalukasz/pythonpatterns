@@ -2,7 +2,7 @@ import tempfile
 import shutil
 from . import synchronize
 from pathlib import Path
-from filesystem import  FakeFileSystem
+from .filesystem import FakeFileSystem
 
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
     try:

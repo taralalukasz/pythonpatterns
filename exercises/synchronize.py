@@ -2,7 +2,7 @@ import hashlib
 import os
 import shutil
 from pathlib import Path
-from filesystem import FileSystem
+from .filesystem import FileSystem
 
 
 BUF_SIZE = 65536 #size of one chunk of the file in bytes 
