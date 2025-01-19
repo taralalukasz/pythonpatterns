@@ -1,4 +1,4 @@
-from model.model import Money, Name, Line
+from domain.model import Money, Name, Line
 import unittest
 
 class TestEq(unittest.TestCase):

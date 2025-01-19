@@ -1,5 +1,5 @@
 import unittest
-from model.model import Money
+from domain.model import Money
 
 
 m5 = Money("gbp", 5)

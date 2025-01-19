@@ -1,4 +1,4 @@
-from model.model import Batch, OrderLine, OutOfStock
+from domain.model import Batch, OrderLine, OutOfStock
 from typing import List
 
 def allocate(line: OrderLine, batches: List[Batch] ) -> str:

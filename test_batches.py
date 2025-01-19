@@ -1,4 +1,4 @@
-from model.model import OrderLine, Batch
+from domain.model import OrderLine, Batch
 from datetime import date, timedelta
 import unittest
 
