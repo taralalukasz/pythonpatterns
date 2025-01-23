@@ -1,7 +1,7 @@
 from domain.model import OrderLine, Batch, OutOfStock
 from datetime import date, timedelta
 import unittest
-from service_layer.allocate import allocate
+from service_layer.services import allocate
 
 
 today = date.today()

@@ -1,5 +1,5 @@
 import abc #this stands for abstract base class
-from model.model import Batch
+from domain.model import Batch
 
 
 #technically, every class witch has add() and get() methods is repository abstraction

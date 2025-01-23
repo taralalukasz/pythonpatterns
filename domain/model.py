@@ -20,6 +20,9 @@ class Line:
 class OutOfStock(Exception):
     pass
 
+class InvalidSku(Exception):
+    pass
+
 #it's called ENTITY OBJECT 
 #it has unique identifier and functions
 #is mutable 
