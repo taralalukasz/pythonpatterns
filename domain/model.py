@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
+from typing import Optional, List, Set
 
 #it's called VALUE OBJECT 
 #works like hashcode/equals contract  
@@ -55,6 +55,10 @@ class Batch:
     
     def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.qty
+    
+    def can_deallocate(self, line: OrderLine) -> bool:
+        return  line in self._allocations
+
 
     @property
     def allocated_quantity(self) -> int:
@@ -110,4 +114,18 @@ class Person:
         self.name = name
 
 
+def allocate(line :OrderLine, batches: List[Batch]):
+    try:
+        batch = next(b for b in sorted(batches) if b.can_allocate(line))
+        batch.allocate(line)
+        return batch.reference
+    except StopIteration: #StopIteration exception is thrown by next() function, if none of the elements fulfills the requirements
+        raise OutOfStock(f"Out of stock for {line.sku}")
 
+def deallocate(line :OrderLine, batches: List[Batch]):
+    try:
+        batch = next(b for b in sorted(batches) if b.can_deallocate(line))
+        batch.deallocate(line)
+        return batch.reference
+    except StopIteration: #StopIteration exception is thrown by next() function, if none of the elements fulfills the requirements
+        raise InvalidSku(f"Cannot deallocate sku {line.sku}")

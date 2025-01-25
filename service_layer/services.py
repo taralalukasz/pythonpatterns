@@ -1,28 +1,30 @@
-from domain.model import Batch, OrderLine, OutOfStock
+import domain.model as model
 from typing import List
 from adapters.repository import AbstractRepository
 from domain.model import InvalidSku
 
-def allocate(line: OrderLine, batches: List[Batch] ) -> str:
-    # for b in sorted(batches):
-    #     if b.can_allocate(line):
-    #         yield b  # Return the value of b
+
+
+##service function should have 
+
+def allocate(line: model.OrderLine, repo: AbstractRepository, session) -> str:
+    batches = repo.list()  #(1)
     
-    #this is equivalent to above
-    try:
-        batch = next(b for b in sorted(batches) if b.can_allocate(line))
-        batch.allocate(line)
-        return batch.reference
-    except StopIteration: #StopIteration exception is thrown by next() function, if none of the elements fulfills the requirements
-        raise OutOfStock(f"Out of stock for {line.sku}")
+    if not is_valid_sku(line.sku, batches):  #(2)
+        raise InvalidSku(f"Invalid sku {line.sku}")
+    batchref = model.allocate(line, batches)  #(3)
+    session.commit()  #(4)
+    return batchref
 
-# def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
-#     batches = repo.list()
-#     if not is_valid_sku(line.sku, batches):
-#         raise InvalidSku(f"Invalid sku {line.sku}")
-#     batchref = allocate(line, batches)
-#     session.commit()
-#     return batchref
+def deallocate(line: model.OrderLine, repo: AbstractRepository, session) -> str:
+    batches = repo.list()  #(1)
+    if not is_valid_sku(line.sku, batches):  #(2)
+        raise InvalidSku(f"Invalid sku {line.sku}")
+    batchref = model.deallocate(line, batches)  #(3)
+    session.commit()  #(4)
+    return batchref
 
-# def is_valid_sku(sku, batches):
-#     return sku in {b.sku for b in batches}
+
+def is_valid_sku(sku, batches):
+    return sku in {b.sku for b in batches}
+
