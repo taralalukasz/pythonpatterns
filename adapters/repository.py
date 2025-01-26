@@ -29,11 +29,11 @@ class SqlAlchemyRepository(AbstractRepository):
         return self.session.query(Batch).all()
     
 class FakeRepository(AbstractRepository):
-    def __init__(self, batches):
-        self._batches = batches
+    def __init__(self):
+        self._batches = []
 
     def add(self, batch):
-        self._batches.add(batch)
+        self._batches.append(batch)
 
     def get(self, reference):
         return next(b for b in self._batches if b.reference == reference)

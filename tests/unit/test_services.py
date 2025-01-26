@@ -1,55 +1,57 @@
 import service_layer.services as services
 import domain.model as model
 from adapters.repository import FakeRepository, FakeSession
+from datetime import date, timedelta
 
 import pytest
 
+tomorrow = date.today() + timedelta(days=1)
+
 def test_returns_allocation():
-    batch = model.Batch("ref", "COMPLICATED-LAMP", 20, None)
-    line = model.OrderLine("orderid", "COMPLICATED-LAMP", 10)
-    repo  = FakeRepository([batch])
-    session = FakeSession()
-    batchref = services.allocate(line, repo, session)
+    repo, session = FakeRepository(), FakeSession()
+    services.add_batch("ref", "COMPLICATED-LAMP", 20, None, repo, session)
+    batchref = services.allocate("orderid", "COMPLICATED-LAMP", 10, repo, session)
 
     assert batchref == "ref"
 
 
 def test_returns_deallocation():
-    batch = model.Batch("ref", "COMPLICATED-LAMP", 20, None)
+    repo, session = FakeRepository(), FakeSession()
     line = model.OrderLine("orderid", "COMPLICATED-LAMP", 10)
-    batch.allocate(line)
-    repo  = FakeRepository([batch])
-    session = FakeSession()
-    batchref = services.deallocate(line, repo, session)
+    services.add_batch("ref", "COMPLICATED-LAMP", 20, None, repo, session)
+    services.allocate("orderid", "COMPLICATED-LAMP", 10, repo, session)
+
+    batchref = services.deallocate("orderid", "COMPLICATED-LAMP", 10, repo, session)
 
     assert batchref == "ref"
 
 def test_error_for_invalid_sku_try_to_deallocate_not_allocated_item():
-    batch = model.Batch("ref", "COMPLICATED-LAMP", 20, None)
-    line = model.OrderLine("orderid", "COMPLICATED-LAMP", 10)
-
-    batch.deallocate(line)
-    repo  = FakeRepository([batch])
-    session = FakeSession()
+    repo, session = FakeRepository(), FakeSession()
+    services.add_batch("ref", "COMPLICATED-LAMP", 20, None, repo, session)
     
     with pytest.raises(model.InvalidSku, match="Cannot deallocate sku COMPLICATED-LAMP"):
-        services.deallocate(line, repo, session)
+        services.deallocate("orderid", "COMPLICATED-LAMP", 10, repo, session)
 
 
 def test_error_for_invalid_sku():
-    batch = model.Batch("ref", "COMPLICATED-LAMP", 20, None)
-    line = model.OrderLine("orderid", "INVALID-SKU", 10)
-    repo  = FakeRepository([batch])
-    session = FakeSession()
+    repo, session = FakeRepository(), FakeSession()
+    services.add_batch("ref", "COMPLICATED-LAMP", 20, None, repo, session)
     
     with pytest.raises(model.InvalidSku, match="Invalid sku INVALID-SKU"):
-        services.allocate(line, repo, session)
+        services.allocate("orderid", "INVALID-SKU", 10, repo, session)
 
 def test_commits():
-    line = model.OrderLine("o1", "OMINOUS-MIRROR", 10)
-    batch = model.Batch("b1", "OMINOUS-MIRROR", 100, eta=None)
-    repo = FakeRepository([batch])
-    session = FakeSession()
-
-    services.allocate(line, repo, session)
+    repo, session = FakeRepository(), FakeSession()
+    services.add_batch("b1", "OMINOUS-MIRROR", 100, None, repo, session)
+    services.allocate("o1", "OMINOUS-MIRROR", 10, repo, session)
     assert session.committed is True
+
+def test_prefers_warehouse_batches_to_shipments():
+    repo, session = FakeRepository(), FakeSession()
+    services.add_batch("b1", "OMINOUS-MIRROR", 100, None, repo, session)
+    services.add_batch("b2", "NOTHER-SKU", 100, None, repo, session)
+
+    batchref = services.allocate("o1", "OMINOUS-MIRROR", 10, repo, session)
+    
+    assert batchref == "b1"
+    
